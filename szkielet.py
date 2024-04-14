@@ -24,7 +24,8 @@ class PrimerPair:
     def __str__(self):
         return (f'Fs = {self.fs}  ,alpha = {self.alpha}, beta ={self.beta}, gamma = {self.gamma}')
     def FITNESS_counting(self):
-        self.fitness = self.leng  + 3*self.lengd + 3*self.Tmd + 3*self.GC + 3*(self.Term) + 50*self.uni + 10*self.Sc + 10*self.PC + self.R
+        self.fitness = self.leng  + 3*self.lengd + 3*self.Tmd + 3*self.GC 
+        #+ 3*self.Term + 50*self.uni + 10*self.Sc + 10*self.PC + self.R
         
 
 #klasa w której jest algorytm genetyczny
@@ -126,7 +127,7 @@ class PrimerDesignGA:
         if component_to_mutate == 0:
             mutation_value = random.randint(0, self.beg_true)
         elif component_to_mutate == 3:
-            mutation_value = random.randint(self.end_true - (fs + alpha), len(self.dna_sequence) - gamma - (fs + alpha))
+            mutation_value = random.randint(self.end_true - (individual.fs + individual.alpha), len(self.dna_sequence) - individual.gamma - (individual.fs + individual.alpha))
         else:
             mutation_value = random.randint(min_primer_length, max_primer_length)
 
@@ -151,7 +152,7 @@ class PrimerDesignGA:
         self.population.extend(self.new_gen)
         self.new_gen.clear()
         self.population.sort(key=lambda pair: pair.fitness)
-        return self.population[:min(self.population_size, len(arr))]
+        return self.population[:min(self.population_size, len(self.population))]
         
     def new_generation(self):
         while len(self.new_gen) < self.mating_pool:
@@ -165,7 +166,7 @@ class PrimerDesignGA:
                 rand_pair = self.population[random.randint(0, self.population_size - 1)]
                 self.mutate(rand_pair)
         
-        self.combine_and_sort()    
+        self.population = self.combine_and_sort()    
         
     def GA(self):
         i = 0
@@ -207,8 +208,8 @@ class PrimerDesignGA:
                 pair.uni = 1
             else:
                 pair.uni = 0
-
-        #Term_counting
+                
+        '''#Term_counting
         if(seqF[-1] in ['G','C']):
             if(seqF[-2] in ['G','C']):
                 if(seqF[-3] not in ['G','C']):
@@ -224,7 +225,7 @@ class PrimerDesignGA:
                 if(seqR[-3] in ['G','C']):
                     pair.Term += 1
         else:
-            pair.Term = +1
+            pair.Term = +1'''
 
         #lengd_counting
         if abs(len(seqF) -len(seqR)) > 3:
@@ -283,7 +284,8 @@ class PrimerDesignGA:
                 else:
                     if (restr_seq in seqF) or (restr_seq in seqR):
                         pass                             #tu możemy dopisać co jeśli naturalnie w peimerze wystepuje takie miejsce ale to po konsultacji
-                    
+        
+        pair.FITNESS_counting()            
 
     @staticmethod
     def complementary(sequence):
