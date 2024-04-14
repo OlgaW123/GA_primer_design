@@ -31,18 +31,22 @@ class PrimerPair:
 class PrimerDesignGA:
     
 
-    def __init__(self, dna_sequence, beg_true, end_true, population_size):
+    def __init__(self, dna_sequence, beg_true, end_true, population_size, mating_pool, Pe, Pm):
         self.dna_sequence = dna_sequence #sekwencja
         self.beg_true = beg_true #poczatek sekwencji do klonowania
         print(self.beg_true)
         self.end_true = end_true #koniec sekwencji do klonowania
         print(self.end_true)
         self.population_size = population_size #wielkosc populacji tj. ilosc primerow
+        self.mating_pool = mating_pool #ilosc potomstwa
+        self.Pe = Pe #prawdopodobienstwo crossing-over
+        self.Pm = Pm #prawdopodobienstwo mutacji
         self.restriction_sequences = []
         self.maxtemp = None
         self.mintemp = None
         self.gather_input_info()
         self.population = self.initialize_population()
+        self.new_gen = []
         self.display_population() #wyswietla populacje - krok check in!
         
 
@@ -68,6 +72,7 @@ class PrimerDesignGA:
                 beta = random.randint(self.end_true - (fs + alpha), len(self.dna_sequence) - gamma - (fs + alpha))
                 primer_pair = PrimerPair(fs, alpha, beta, gamma)
                 if not self.primer_pair_exists(population, primer_pair):
+                    self.properties(primer_pair)
                     population.append(primer_pair)
         return population  
         
@@ -85,7 +90,7 @@ class PrimerDesignGA:
             print(f"{index:5} | {primer_pair.fs:5} | {primer_pair.fe:5} | {primer_pair.rs:5} | {primer_pair.re:5} | "
                   f"({primer_pair.fs}, {primer_pair.alpha}, {primer_pair.beta}, {primer_pair.gamma})")
     
-    def binary_mask_crossover(self, parent1, parent2):
+    def crossover(self, parent1, parent2):
         
         R = randint(0,15) 
         
@@ -105,11 +110,11 @@ class PrimerDesignGA:
         offspring1 = PrimerPair(new_fs1, new_alpha1, new_beta1, new_gamma1)
         offspring2 = PrimerPair(new_fs2, new_alpha2, new_beta2, new_gamma2)       
         
-        properties(offspring1)
-        properties(offspring2)
+        self.properties(offspring1)
+        self.properties(offspring2)
         
-        self.population.append(offspring1)
-        self.population.append(offspring2)
+        self.new_gen.append(offspring1)
+        self.new_gen.append(offspring2)
     
     
     def mutate(self, individual):
@@ -120,7 +125,7 @@ class PrimerDesignGA:
             mutation_value = random.randint(0, self.beg_true)
         elif component_to_mutate == 3:
             mutation_value = random.randint(self.end_true - (fs + alpha), len(self.dna_sequence) - gamma - (fs + alpha))
-        else
+        else:
             mutation_value = random.randint(min_primer_length, max_primer_length)
 
         # kopia
@@ -136,19 +141,34 @@ class PrimerDesignGA:
         elif component_to_mutate == 3:
             mutated_individual.gamma += mutation_value
             
-        properties(mutated_individual)
+        self.properties(mutated_individual)
         
-        self.population.append(mutated_individual)
+        self.new_gen.append(mutated_individual)
     
+    def combine_and_sort(self):
+        population.extend(new_gen)
+        new_gen.clear()
+        self.population.sort(key=lambda pair: pair.fitness, reverse = True)
+        return self.population[:min(population_size, len(arr))]
+        
+    def new_generation(self):
+        while len(new_gen) < mating_pool:
+            if(random.random() < self.Pe):
+                #pair1,pair2 = roulette()
+                self.crossover(pair1,pair2)
+            
+            if(random.random() < self.Pm):
+                rand_pair = random.randint(0, self.population_size - 1)
+                self.mutate(rand_pair)
+        
+        self.combine_and_sort()    
     
     def properties(self, pair):
         
-
         seqF = str(self.dna_sequence[pair.fs : pair.fs + pair.alpha])
         #here I create the complementary and reversed sequence of Reverse Primer. This way I receive it's sequence 5'-> 3'
         preseqR = str(self.dna_sequence[pair.fs+pair.alpha +pair.beta : pair.fs+pair.alpha +pair.beta + pair.gamma])
         seqR = str(self.complementary(preseqR))
-
 
         #gc_counting
         FGC = (seqF.count('G')+seqF.count('C'))/pair.alpha
@@ -157,7 +177,6 @@ class PrimerDesignGA:
             pair.GC = 0
         else:
             pair.GC = 1
-
 
         #Tmd_counting
         FTM = (seqF.count('G')+seqF.count('C'))*4 + (seqF.count('A')+seqF.count('T'))*2
@@ -178,7 +197,6 @@ class PrimerDesignGA:
             else:
                 pair.uni = 0
 
-
         #Term_counting
         if(seqF[-1] in ['G','C']):
             if(seqF[-2] in ['G','C']):
@@ -197,7 +215,6 @@ class PrimerDesignGA:
         else:
             pair.Term = +1
 
-
         #lengd_counting
         if abs(len(seqF) -len(seqR)) > 3:
             pair.lengd = 1
@@ -210,7 +227,6 @@ class PrimerDesignGA:
         else:
             pair.leng = 1
         
-
 
         #Sc_counting
         #here I check the self-complementarity
@@ -234,7 +250,6 @@ class PrimerDesignGA:
                 if(stem_seq_proposition in the_opposite_probable_stem_seq_complementary):
                     pair.Sc = 1
 
-
         #PC_counting     TU MOZNA TEZ DOPISAC TAKIE complementary z przerwami!!!
         min_compl_size = 3
         for i in range(len(seqF) - min_compl_size):
@@ -243,7 +258,6 @@ class PrimerDesignGA:
                 pair.SC = 1
             else:
                 pair.SC = 0
-
 
         #R_counting - restriction enzyme
         #this function is changed - we are going to search whether there is a restriction enzyme's cutting site in the whole sequence and reverse sequence
@@ -260,10 +274,6 @@ class PrimerDesignGA:
                         pass                             #tu możemy dopisać co jeśli naturalnie w peimerze wystepuje takie miejsce ale to po konsultacji
                     
 
-        
-
-            
-
     @staticmethod
     def complementary(sequence):
         dic = {'A':'T', 'T':'A', 'C':'G', 'G':'C'}
@@ -271,11 +281,6 @@ class PrimerDesignGA:
             sequence += dic[i]
         compl_sequence = sequence[::-1]
         return compl_sequence
-
-
-
-        
-
 
 
 #czemu nie damy tego wczesniej? bo jest to uzywane w funkcjach powyzej 
@@ -293,12 +298,7 @@ def find_target_sequence(dna_sequence, target_sequence):
         return None
  
 
-
-
-
-
-
 whole_dna_sequence = "ATCGTGACTGATCGTACGTACGTAGCTAGTCTAGTCTAAATGCGCCGAT"
 target_sequence_to_replicate = "GTACGTAGC"
 position = find_target_sequence(whole_dna_sequence, target_sequence_to_replicate)
-ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=5)
+ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=5, mating_pool = 3, Pe = 0.7, Pm = 0.1)
