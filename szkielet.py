@@ -158,7 +158,7 @@ class PrimerDesignGA:
                 self.crossover(pair1,pair2)
             
             if(random.random() < self.Pm):
-                rand_pair = random.randint(0, self.population_size - 1)
+                rand_pair = self.population[random.randint(0, self.population_size - 1)]
                 self.mutate(rand_pair)
         
         self.combine_and_sort()    
