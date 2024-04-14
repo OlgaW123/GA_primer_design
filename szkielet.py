@@ -31,7 +31,7 @@ class PrimerPair:
 class PrimerDesignGA:
     
 
-    def __init__(self, dna_sequence, beg_true, end_true, population_size, mating_pool, Pe, Pm):
+    def __init__(self, dna_sequence, beg_true, end_true, population_size, mating_pool, Pe, Pm, max_gen):
         self.dna_sequence = dna_sequence #sekwencja
         self.beg_true = beg_true #poczatek sekwencji do klonowania
         print(self.beg_true)
@@ -41,12 +41,14 @@ class PrimerDesignGA:
         self.mating_pool = mating_pool #ilosc potomstwa
         self.Pe = Pe #prawdopodobienstwo crossing-over
         self.Pm = Pm #prawdopodobienstwo mutacji
+        self.max_gen = max_gen #maksymalna ilosc generacji
         self.restriction_sequences = []
         self.maxtemp = None
         self.mintemp = None
         self.gather_input_info()
         self.population = self.initialize_population()
         self.new_gen = []
+        self.GA()
         self.display_population() #wyswietla populacje - krok check in!
         
 
@@ -83,16 +85,16 @@ class PrimerDesignGA:
                    
     def display_population(self):
         print("Displaying the entire population of primer pairs:")
-        print(f"{'Index':>5} | {'Fs':>5} | {'Fe':>5} | {'Rs':>5} | {'Re':>5} | {'Vector (Fs, Alpha, Beta, Gamma)':>30}")
+        print(f"{'Index':>5} | {'Fs':>5} | {'Fe':>5} | {'Rs':>5} | {'Re':>5} | {'Vector (Fs, Alpha, Beta, Gamma)':>30} | {'Fitness':>10}")
         print("-" * 70)
         for index, primer_pair in enumerate(self.population):
             self.properties(primer_pair)     #to mozna usunac!
             print(f"{index:5} | {primer_pair.fs:5} | {primer_pair.fe:5} | {primer_pair.rs:5} | {primer_pair.re:5} | "
-                  f"({primer_pair.fs}, {primer_pair.alpha}, {primer_pair.beta}, {primer_pair.gamma})")
+                  f"({primer_pair.fs}, {primer_pair.alpha}, {primer_pair.beta}, {primer_pair.gamma}) | {primer_pair.fitness}")
     
     def crossover(self, parent1, parent2):
         
-        R = randint(0,15) 
+        R = random.randint(0,15) 
         
         binary_mask = f"{R:04b}"  #na binarne
 
@@ -146,15 +148,17 @@ class PrimerDesignGA:
         self.new_gen.append(mutated_individual)
     
     def combine_and_sort(self):
-        population.extend(new_gen)
-        new_gen.clear()
-        self.population.sort(key=lambda pair: pair.fitness, reverse = True)
-        return self.population[:min(population_size, len(arr))]
+        self.population.extend(self.new_gen)
+        self.new_gen.clear()
+        self.population.sort(key=lambda pair: pair.fitness)
+        return self.population[:min(self.population_size, len(arr))]
         
     def new_generation(self):
-        while len(new_gen) < mating_pool:
+        while len(self.new_gen) < self.mating_pool:
             if(random.random() < self.Pe):
                 #pair1,pair2 = roulette()
+                pair1 = self.population[random.randint(0, self.population_size - 1)]
+                pair2 = self.population[random.randint(0, self.population_size - 1)]
                 self.crossover(pair1,pair2)
             
             if(random.random() < self.Pm):
@@ -162,7 +166,14 @@ class PrimerDesignGA:
                 self.mutate(rand_pair)
         
         self.combine_and_sort()    
-    
+        
+    def GA(self):
+        i = 0
+        while i < self.max_gen:
+            self.new_generation()
+            i = i + 1
+            
+            
     def properties(self, pair):
         
         seqF = str(self.dna_sequence[pair.fs : pair.fs + pair.alpha])
@@ -301,4 +312,4 @@ def find_target_sequence(dna_sequence, target_sequence):
 whole_dna_sequence = "ATCGTGACTGATCGTACGTACGTAGCTAGTCTAGTCTAAATGCGCCGAT"
 target_sequence_to_replicate = "GTACGTAGC"
 position = find_target_sequence(whole_dna_sequence, target_sequence_to_replicate)
-ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=5, mating_pool = 3, Pe = 0.7, Pm = 0.1)
+ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=5, mating_pool = 3, Pe = 0.7, Pm = 0.1, max_gen = 10)
