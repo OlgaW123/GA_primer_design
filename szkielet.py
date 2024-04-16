@@ -24,8 +24,12 @@ class PrimerPair:
     def __str__(self):
         return (f'Fs = {self.fs}  ,alpha = {self.alpha}, beta ={self.beta}, gamma = {self.gamma}, self.GC = {self.GC}, self.Tmd = {self.Tmd}, self.uni = {self.uni}, self.lengd = {self.lengd}, self.leng = {self.leng}, self.R = {self.R}, self.PC = {self.PC}, self.Term = {self.Term}, self.Sc = {self.Sc}')
     def FITNESS_counting(self):
+<<<<<<< HEAD
         self.fitness = self.leng  + 3*self.lengd + 3*self.Tmd + 3*self.GC 
         #+ 3*self.Term + 50*self.uni + 10*self.Sc + 10*self.PC + self.R
+=======
+        self.fitness = self.leng  + 3*self.lengd + 3*self.Tmd + 3*self.GC + 3*self.Term + 50*self.uni + 10*self.Sc + 10*self.PC + self.R
+>>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
         
 
 #klasa w której jest algorytm genetyczny
@@ -154,6 +158,7 @@ class PrimerDesignGA:
         self.new_gen.clear()
         self.population.sort(key=lambda pair: pair.fitness)
         return self.population[:min(self.population_size, len(self.population))]
+<<<<<<< HEAD
         
     def new_generation(self):
         while len(self.new_gen) < self.mating_pool:
@@ -178,6 +183,76 @@ class PrimerDesignGA:
             
     def properties(self, pair):
         
+=======
+        
+    def new_generation(self):
+        while len(self.new_gen) < self.mating_pool:
+            if(random.random() < self.Pe):
+                pair1,pair2 = self.roulette()
+                #pair1 = self.population[random.randint(0, self.population_size - 1)]
+                #pair2 = self.population[random.randint(0, self.population_size - 1)]
+                if pair1 is not None and pair2 is not None:
+                    self.crossover(pair1,pair2)
+            
+            if(random.random() < self.Pm):
+                rand_pair = self.population[random.randint(0, self.population_size - 1)]
+                self.mutate(rand_pair)
+        
+        self.population = self.combine_and_sort() 
+
+    def roulette(self):
+        
+        pair_no1 = None
+        pair_no2 = None
+        if len(self.population)>=2:
+            sum_of_fitness = 0
+            cumulative_score = 0 
+            rand1 = random.random()
+            rand2 = random.random()
+            done = 0
+
+            for pair in self.population:
+                sum_of_fitness += pair.fitness
+            #print(sum_of_fitness)
+            
+                
+            if sum_of_fitness != 0:
+                for pair in self.population:
+                    #print(pair)
+                    cumulative_score += pair.fitness/sum_of_fitness
+                    #print(f'pairfitness: {pair.fitness}')
+                    #print(f'cumul {cumulative_score}')
+                    if pair_no1 is None and rand1 <= cumulative_score:
+                        if pair != pair_no2:
+                            pair_no1 = pair
+                            done +=1
+                            #print(f'pair1{pair_no1}')
+                        
+                    if pair_no2 is None and rand2 <= cumulative_score:
+                        if pair != pair_no1:
+                            pair_no2 = pair
+                            #print(f'pair2{pair_no2}')
+                            done +=1
+                    if done == 2:
+                        break
+                return pair_no1, pair_no2
+            else:
+                #tu w sumie moznaby przerwa algorytm np dodac jakis argument do GA jakby czy np nie jest idealnie i mozna dac tam break - watpie ze to sie wydarzy ale no 
+                return self.population[random.randint(0, self.population_size - 1)], self.population[random.randint(0, self.population_size - 1)]
+        else:
+            return None, None
+                    
+
+    def GA(self):
+        i = 0
+        while i < self.max_gen:
+            self.new_generation()
+            i = i + 1
+            
+            
+    def properties(self, pair):
+        
+>>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
         
         seqF = str(self.dna_sequence[pair.fs : pair.fs + pair.alpha])
         #here I create the complementary and reversed sequence of Reverse Primer. This way I receive it's sequence 5'-> 3'
@@ -192,9 +267,15 @@ class PrimerDesignGA:
         else:
             pair.GC = 1
 
+<<<<<<< HEAD
         print(f'seqF {seqF}')      #trzy printy do usunięcia
         print(f'preseqR {preseqR}')
         print(f'seqR {seqR}')
+=======
+        #print(f'seqF {seqF}')      #trzy printy do usunięcia
+        #print(f'preseqR {preseqR}')
+        #print(f'seqR {seqR}')
+>>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
 
         #Tmd_counting
         FTM = (seqF.count('G')+seqF.count('C'))*4 + (seqF.count('A')+seqF.count('T'))*2
@@ -205,22 +286,35 @@ class PrimerDesignGA:
                 pair.Tmd = 1
         else:
             pair.Tmd = 1
+<<<<<<< HEAD
         print(f'Tmd = {FTM} {RTM}')
+=======
+        #print(f'Tmd = {FTM} {RTM}')
+>>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
   
         #Uni_counting
         if (self.dna_sequence.count(seqF) != 1):
                 pair.uni = 1
+<<<<<<< HEAD
                 print('seqF sie powtarza')
         else:
             if(self.dna_sequence.count(preseqR) != 1):
                 pair.uni = 1
                 print('preseqR sie powtarza')
+=======
+                #print('seqF sie powtarza')
+        else:
+            if(self.dna_sequence.count(preseqR) != 1):
+                pair.uni = 1
+                #print('preseqR sie powtarza')
+>>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
             else:
                 pair.uni = 0
                 
         #Term_counting
         if len(seqF)>=1:
             if(seqF[-1] in ['G','C']):
+<<<<<<< HEAD
                 if(seqF[-2] in ['G','C'] and len(seqF)>=2):
                     if(seqF[-3] not in ['G','C']and len(seqF)>=3):
                         pair.Term = 0    
@@ -234,6 +328,26 @@ class PrimerDesignGA:
                 if(seqR[-2] in ['G','C'] and len(seqF)>=2):
                     if(seqR[-3] in ['G','C'] and len(seqF)>=3):
                         pair.Term += 1
+=======
+                if(len(seqF)>=2):
+                    if(seqF[-2] in ['G','C']):
+                        if(len(seqF)>=3):
+                            if(seqF[-3] not in ['G','C']):
+                                pair.Term = 0    
+                            else:
+                                pair.Term = 1
+                    else:
+                        pair.Term = 0
+            else:
+                pair.Term = 1
+        if(len(seqR)>=1):
+            if(seqR[-1] in ['G','C']):
+                if(len(seqR)>=2):
+                    if(seqR[-2] in ['G','C']):
+                        if(len(seqR)>=3):
+                            if(seqR[-3] in ['G','C']):
+                                pair.Term += 1
+>>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
             else:
                 pair.Term += 1
             
@@ -315,7 +429,11 @@ class PrimerDesignGA:
                         pass                             #tu możemy dopisać co jeśli naturalnie w samym peimerze wystepuje takie miejsce ale to po konsultacji
         
         pair.FITNESS_counting() 
+<<<<<<< HEAD
         print(pair)           
+=======
+        #print(pair)           
+>>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
 
     @staticmethod
     def complementary(sequence):
@@ -345,4 +463,8 @@ def find_target_sequence(dna_sequence, target_sequence):
 whole_dna_sequence = "ATCGTGACTGATCGTACGTACGTAGCTAGTCTAGTCTAAATGCGCCGAT"
 target_sequence_to_replicate = "GTACGTAGC"
 position = find_target_sequence(whole_dna_sequence, target_sequence_to_replicate)
+<<<<<<< HEAD
 ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=3, mating_pool = 3, Pe = 0.7, Pm = 0.1, max_gen = 1)
+=======
+ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=6, mating_pool = 3, Pe = 0.7, Pm = 0.1, max_gen = 2)
+>>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
