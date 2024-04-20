@@ -1,4 +1,4 @@
-#szkielet
+ #szkielet
 import random #do losowania
 
 #podstawowa klasa reprezentujaca pare primerow
@@ -24,12 +24,8 @@ class PrimerPair:
     def __str__(self):
         return (f'Fs = {self.fs}  ,alpha = {self.alpha}, beta ={self.beta}, gamma = {self.gamma}, self.GC = {self.GC}, self.Tmd = {self.Tmd}, self.uni = {self.uni}, self.lengd = {self.lengd}, self.leng = {self.leng}, self.R = {self.R}, self.PC = {self.PC}, self.Term = {self.Term}, self.Sc = {self.Sc}')
     def FITNESS_counting(self):
-<<<<<<< HEAD
         self.fitness = self.leng  + 3*self.lengd + 3*self.Tmd + 3*self.GC 
         #+ 3*self.Term + 50*self.uni + 10*self.Sc + 10*self.PC + self.R
-=======
-        self.fitness = self.leng  + 3*self.lengd + 3*self.Tmd + 3*self.GC + 3*self.Term + 50*self.uni + 10*self.Sc + 10*self.PC + self.R
->>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
         
 
 #klasa w której jest algorytm genetyczny
@@ -60,9 +56,12 @@ class PrimerDesignGA:
     def gather_input_info(self):
         for i in range(2):
             self.restriction_sequences.append((input(f'{i} Please provide a restriction sites sequence we should check, if none wirite n: ')).upper())
-        self.mintemp = int(input("Please input the minimum melting temperature: "))
-        self.maxtemp = int(input("Please input the maximum melting temperature: "))
-        
+        self.mintemp = int(input("Please input the minimum melting temperature (must be above 50): "))
+        if self.mintemp <50:
+            self.mintemp = 52
+        self.maxtemp = int(input("Please input the maximum melting temperature (must be below 72): "))
+        if self.maxtemp >=72:
+            self.maxtemp = 65
         
     
    # inicjalizacja populacji - dodac funkcje sprawdzajaca czy primery sie nie powtarzaja   ------ wydaje mi sie ze sprawdzasz przed dodaniem
@@ -158,7 +157,6 @@ class PrimerDesignGA:
         self.new_gen.clear()
         self.population.sort(key=lambda pair: pair.fitness)
         return self.population[:min(self.population_size, len(self.population))]
-<<<<<<< HEAD
         
     def new_generation(self):
         while len(self.new_gen) < self.mating_pool:
@@ -183,76 +181,6 @@ class PrimerDesignGA:
             
     def properties(self, pair):
         
-=======
-        
-    def new_generation(self):
-        while len(self.new_gen) < self.mating_pool:
-            if(random.random() < self.Pe):
-                pair1,pair2 = self.roulette()
-                #pair1 = self.population[random.randint(0, self.population_size - 1)]
-                #pair2 = self.population[random.randint(0, self.population_size - 1)]
-                if pair1 is not None and pair2 is not None:
-                    self.crossover(pair1,pair2)
-            
-            if(random.random() < self.Pm):
-                rand_pair = self.population[random.randint(0, self.population_size - 1)]
-                self.mutate(rand_pair)
-        
-        self.population = self.combine_and_sort() 
-
-    def roulette(self):
-        
-        pair_no1 = None
-        pair_no2 = None
-        if len(self.population)>=2:
-            sum_of_fitness = 0
-            cumulative_score = 0 
-            rand1 = random.random()
-            rand2 = random.random()
-            done = 0
-
-            for pair in self.population:
-                sum_of_fitness += pair.fitness
-            #print(sum_of_fitness)
-            
-                
-            if sum_of_fitness != 0:
-                for pair in self.population:
-                    #print(pair)
-                    cumulative_score += pair.fitness/sum_of_fitness
-                    #print(f'pairfitness: {pair.fitness}')
-                    #print(f'cumul {cumulative_score}')
-                    if pair_no1 is None and rand1 <= cumulative_score:
-                        if pair != pair_no2:
-                            pair_no1 = pair
-                            done +=1
-                            #print(f'pair1{pair_no1}')
-                        
-                    if pair_no2 is None and rand2 <= cumulative_score:
-                        if pair != pair_no1:
-                            pair_no2 = pair
-                            #print(f'pair2{pair_no2}')
-                            done +=1
-                    if done == 2:
-                        break
-                return pair_no1, pair_no2
-            else:
-                #tu w sumie moznaby przerwa algorytm np dodac jakis argument do GA jakby czy np nie jest idealnie i mozna dac tam break - watpie ze to sie wydarzy ale no 
-                return self.population[random.randint(0, self.population_size - 1)], self.population[random.randint(0, self.population_size - 1)]
-        else:
-            return None, None
-                    
-
-    def GA(self):
-        i = 0
-        while i < self.max_gen:
-            self.new_generation()
-            i = i + 1
-            
-            
-    def properties(self, pair):
-        
->>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
         
         seqF = str(self.dna_sequence[pair.fs : pair.fs + pair.alpha])
         #here I create the complementary and reversed sequence of Reverse Primer. This way I receive it's sequence 5'-> 3'
@@ -267,54 +195,48 @@ class PrimerDesignGA:
         else:
             pair.GC = 1
 
-<<<<<<< HEAD
         print(f'seqF {seqF}')      #trzy printy do usunięcia
         print(f'preseqR {preseqR}')
         print(f'seqR {seqR}')
-=======
-        #print(f'seqF {seqF}')      #trzy printy do usunięcia
-        #print(f'preseqR {preseqR}')
-        #print(f'seqR {seqR}')
->>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
 
         #Tmd_counting
-        FTM = (seqF.count('G')+seqF.count('C'))*4 + (seqF.count('A')+seqF.count('T'))*2
-        RTM = (seqR.count('G')+seqR.count('C'))*4 + (seqR.count('A')+seqR.count('T'))*2
-        if(abs(FTM - RTM <=5)):
+        # I am using the idea from https://www.rosalind.bio/en/knowledge/what-formula-is-used-to-calculate-tm
+        #I am creating a scale for the fitness punctation. between 0-2 difference it is 0, between 3-4 it is 0.5, then after 5 it is a 1. And if any primer is not betwwen mintemp and maxtemp I add another +1
+        if(pair.alpha > 13):
+            FTM = 64.9+41*(seqF.count('G')+seqF.count('C') - 16.4)/(pair.alpha)
+        else:
+            FTM = (seqF.count('G')+seqF.count('C'))*4 + (seqF.count('A')+seqF.count('T'))*2
+        if(pair.gamma > 13):
+
+            RTM = 64.9+41*(seqR.count('G')+seqR.count('C') - 16.4)/(pair.gamma)
+        else:    
+            RTM = (seqR.count('G')+seqR.count('C'))*4 + (seqR.count('A')+seqR.count('T'))*2
+
+        if(abs(FTM - RTM) <2):
             pair.Tmd = 0
-            if(FTM < self.mintemp or FTM > self.maxtemp or RTM < self.mintemp or RTM > self.maxtemp ):
-                pair.Tmd = 1
+        elif(abs(FTM - RTM) <2):
+            pair.Tmd = 0.5
         else:
             pair.Tmd = 1
-<<<<<<< HEAD
-        print(f'Tmd = {FTM} {RTM}')
-=======
+
+        if(FTM < self.mintemp or FTM > self.maxtemp or RTM < self.mintemp or RTM > self.maxtemp ):
+            pair.Tmd += 1
         #print(f'Tmd = {FTM} {RTM}')
->>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
   
         #Uni_counting
         if (self.dna_sequence.count(seqF) != 1):
                 pair.uni = 1
-<<<<<<< HEAD
                 print('seqF sie powtarza')
         else:
             if(self.dna_sequence.count(preseqR) != 1):
                 pair.uni = 1
                 print('preseqR sie powtarza')
-=======
-                #print('seqF sie powtarza')
-        else:
-            if(self.dna_sequence.count(preseqR) != 1):
-                pair.uni = 1
-                #print('preseqR sie powtarza')
->>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
             else:
                 pair.uni = 0
                 
         #Term_counting
         if len(seqF)>=1:
             if(seqF[-1] in ['G','C']):
-<<<<<<< HEAD
                 if(seqF[-2] in ['G','C'] and len(seqF)>=2):
                     if(seqF[-3] not in ['G','C']and len(seqF)>=3):
                         pair.Term = 0    
@@ -328,26 +250,6 @@ class PrimerDesignGA:
                 if(seqR[-2] in ['G','C'] and len(seqF)>=2):
                     if(seqR[-3] in ['G','C'] and len(seqF)>=3):
                         pair.Term += 1
-=======
-                if(len(seqF)>=2):
-                    if(seqF[-2] in ['G','C']):
-                        if(len(seqF)>=3):
-                            if(seqF[-3] not in ['G','C']):
-                                pair.Term = 0    
-                            else:
-                                pair.Term = 1
-                    else:
-                        pair.Term = 0
-            else:
-                pair.Term = 1
-        if(len(seqR)>=1):
-            if(seqR[-1] in ['G','C']):
-                if(len(seqR)>=2):
-                    if(seqR[-2] in ['G','C']):
-                        if(len(seqR)>=3):
-                            if(seqR[-3] in ['G','C']):
-                                pair.Term += 1
->>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
             else:
                 pair.Term += 1
             
@@ -402,15 +304,77 @@ class PrimerDesignGA:
 
 
         #PC_counting     TU MOZNA TEZ DOPISAC TAKIE complementary z przerwami!!!
-        min_compl_size = 3
+        #api dla https://www.thermofisher.com/pl/en/home/brands/thermo-scientific/molecular-biology/molecular-biology-learning-center/molecular-biology-resource-library/thermo-scientific-web-tools/multiple-primer-analyzer.html
+        min_compl_size = 6
         for i in range(len(seqF) - min_compl_size):
             checked_fragment = seqF[i:i+min_compl_size]
             if checked_fragment in preseqR:
                 pair.PC = 1
             else:
                 pair.PC = 0
+        counter = 0
+        for f in range(len(seqF)-min_compl_size):
+            if counter >= min_compl_size:
+                            break
+            for r in range(len(seqR)-min_compl_size):
+                
+                if counter >= min_compl_size:
+                            break
+                counter = 0
+                if self.complementary(seqF[f]) == seqR[r]:
+                    print(f'nowe f: {f}')
+                    print(f'nowe r: {r}')
+                    counter += 1
+                    j=r+1
+                    for i in range(f+1, len(seqF)):
+                        if j < len(seqR):
+                            if self.complementary(seqF[i]) == seqR[j]:
+                                print(counter)
+                                counter +=1
 
-        #R_counting - restriction enzyme
+                            j+=1
+                            if counter >= min_compl_size:
+                                break
+                        else:
+                            break
+        if counter >= min_compl_size:
+            PC = 1
+        else:
+            PC = 0
+            #checking the reversed sequence of forward primer with the sequence of reverse primer
+            rseqF = seqF[::-1]
+            for f in range(len(seqF)-min_compl_size):
+                if counter >= min_compl_size:
+                                break
+                for r in range(len(seqR)-min_compl_size):
+                    
+                    if counter >= min_compl_size:
+                                break
+                    counter = 0
+                    if self.complementary(rseqF[f]) == seqR[r]:
+                        print(f'nowe f: {f}')
+                        print(f'nowe r: {r}')
+                        counter += 1
+                        j=r+1
+                        for i in range(f+1, len(seqF)):
+                            if j < len(seqR):
+                                if self.complementary(rseqF[i]) == seqR[j]:
+                                    print(counter)
+                                    counter +=1
+
+                                j+=1
+                                if counter >= min_compl_size:
+                                    break
+                            else:
+                                break
+            if counter >= min_compl_size:
+                PC = 1
+                            
+                        
+
+                    
+
+        #R_counting - restriction enzyme              moze bysmy sobie to liczyly tylko do eksperymentu z klonowaniem ekspresyjnym?
         #this function is changed - we are going to search whether there is a restriction enzyme's cutting site in the whole sequence and reverse sequence
         amplified_sequence = self.dna_sequence[pair.fs : pair.fs+pair.alpha+pair.beta+pair.gamma ]
         amplified_sequence_complementary = self.complementary(amplified_sequence)
@@ -419,21 +383,26 @@ class PrimerDesignGA:
             if(restr_seq != 'n'):
                 #here I check whether this restricion site exists in the target sequence, if yes it should be disqualified
                 if(restr_seq in (self.dna_sequence[self.beg_true : self.end_true]) or (restr_seq in self.complementary((self.dna_sequence[self.beg_true : self.end_true])))):
-                    pair.R = 1
-                    continue
+                    pair.R = 1000000
+                    print(f'You chose a restriction enzyme which cuts the target sequence {restr_seq}')
+                    #przerywamy tu moze calosc???
+                    break
+                '''
                 else:
-                    #tu przypadek ze wgl jest w amplifikowanej ale poza targetem
+                    #in an amplified seq but not in the target : good one
                     if restr_seq in amplified_sequence or restr_seq in amplified_sequence_complementary:
-                        pass
-                    if (restr_seq in seqF) or (restr_seq in seqR):
-                        pass                             #tu możemy dopisać co jeśli naturalnie w samym peimerze wystepuje takie miejsce ale to po konsultacji
-        
+                        pair.R = 0
+                    if (self.experiment == 'expressioncloning'):
+                        if (restr_seq in seqF) or (restr_seq in seqR):
+                            pair.R = 0                         #tu możemy dopisać co jeśli naturalnie w samym primerze wystepuje takie miejsce ale to po konsultacji
+                        else:
+                            seqF = 'AT' + restr_seq[0] + seqF
+                            preseqR = preseqR + restr_seq[1] + 'AT'
+                            seqR = self.complementary(preseqR) '''
+
+
         pair.FITNESS_counting() 
-<<<<<<< HEAD
         print(pair)           
-=======
-        #print(pair)           
->>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
 
     @staticmethod
     def complementary(sequence):
@@ -447,8 +416,14 @@ class PrimerDesignGA:
 
 #czemu nie damy tego wczesniej? bo jest to uzywane w funkcjach powyzej 
             #MUSIMY ZMIENIC!!!!!!   
-min_primer_length = 4
-max_primer_length = 6
+min_primer_length = 4 #18
+max_primer_length = 6 #26
+#if(self.experiment == 'expressioncloning'):
+    #max_primer_length_finish = 31
+
+
+
+
 #funkcja do szukania poczatkowego i koncowego indeksu sekwencji do klonowania
 def find_target_sequence(dna_sequence, target_sequence):
     start_index = dna_sequence.find(target_sequence)
@@ -463,8 +438,4 @@ def find_target_sequence(dna_sequence, target_sequence):
 whole_dna_sequence = "ATCGTGACTGATCGTACGTACGTAGCTAGTCTAGTCTAAATGCGCCGAT"
 target_sequence_to_replicate = "GTACGTAGC"
 position = find_target_sequence(whole_dna_sequence, target_sequence_to_replicate)
-<<<<<<< HEAD
 ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=3, mating_pool = 3, Pe = 0.7, Pm = 0.1, max_gen = 1)
-=======
-ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=6, mating_pool = 3, Pe = 0.7, Pm = 0.1, max_gen = 2)
->>>>>>> 7979d77 (dodalam ruletkw i chyba naprawione properties przynajmniej dla mnie fitness juz sie nie wywala)
