@@ -1,4 +1,4 @@
- #szkielet
+#szkielet
 import random #do losowania
 
 #podstawowa klasa reprezentujaca pare primerow
@@ -17,15 +17,15 @@ class PrimerPair:
         self.uni = None
         self.lengd = None
         self.leng = None
-        self.R = None
+        #self.R = None
         self.PC = None
         self.Term = None
         self.Sc = None
     def __str__(self):
-        return (f'Fs = {self.fs}  ,alpha = {self.alpha}, beta ={self.beta}, gamma = {self.gamma}, self.GC = {self.GC}, self.Tmd = {self.Tmd}, self.uni = {self.uni}, self.lengd = {self.lengd}, self.leng = {self.leng}, self.R = {self.R}, self.PC = {self.PC}, self.Term = {self.Term}, self.Sc = {self.Sc}')
+        return (f'Fs = {self.fs}  ,alpha = {self.alpha}, beta ={self.beta}, gamma = {self.gamma}, self.GC = {self.GC}, self.Tmd = {self.Tmd}, self.uni = {self.uni}, self.lengd = {self.lengd}, self.leng = {self.leng}, self.PC = {self.PC}, self.Term = {self.Term}, self.Sc = {self.Sc}')
     def FITNESS_counting(self):
-        self.fitness = self.leng  + 3*self.lengd + 3*self.Tmd + 3*self.GC 
-        #+ 3*self.Term + 50*self.uni + 10*self.Sc + 10*self.PC + self.R
+        self.fitness = 1/(self.leng  + 3*self.lengd + 3*self.Tmd + 3*self.GC + 3*self.Term + 50*self.uni + 10*self.Sc + 10*self.PC)
+        # + self.R
         
 
 #klasa w której jest algorytm genetyczny
@@ -35,33 +35,30 @@ class PrimerDesignGA:
     def __init__(self, dna_sequence, beg_true, end_true, population_size, mating_pool, Pe, Pm, max_gen):
         self.dna_sequence = dna_sequence #sekwencja
         self.beg_true = beg_true #poczatek sekwencji do klonowania
-        print(self.beg_true)
+        #print(self.beg_true)
         self.end_true = end_true #koniec sekwencji do klonowania
-        print(self.end_true)
+        #print(self.end_true)
         self.population_size = population_size #wielkosc populacji tj. ilosc primerow
         self.mating_pool = mating_pool #ilosc potomstwa
         self.Pe = Pe #prawdopodobienstwo crossing-over
         self.Pm = Pm #prawdopodobienstwo mutacji
         self.max_gen = max_gen #maksymalna ilosc generacji
-        self.restriction_sequences = []
+        #self.restriction_sequences = []
         self.maxtemp = None
         self.mintemp = None
         self.gather_input_info()
         self.population = self.initialize_population()
         self.new_gen = []
         self.GA()
-        #self.display_population() #wyswietla populacje - krok check in!
+        self.display_population() #wyswietla populacje - krok check in!
         
 
     def gather_input_info(self):
-        for i in range(2):
-            self.restriction_sequences.append((input(f'{i} Please provide a restriction sites sequence we should check, if none wirite n: ')).upper())
-        self.mintemp = int(input("Please input the minimum melting temperature (must be above 50): "))
-        if self.mintemp <50:
-            self.mintemp = 52
-        self.maxtemp = int(input("Please input the maximum melting temperature (must be below 72): "))
-        if self.maxtemp >=72:
-            self.maxtemp = 65
+        #for i in range(2):
+        #    self.restriction_sequences.append((input(f'{i} Please provide a restriction sites sequence we should check, if none wirite n: ')).upper())
+        self.mintemp = int(input("Please input the minimum melting temperature: "))
+        self.maxtemp = int(input("Please input the maximum melting temperature: "))
+        
         
     
    # inicjalizacja populacji - dodac funkcje sprawdzajaca czy primery sie nie powtarzaja   ------ wydaje mi sie ze sprawdzasz przed dodaniem
@@ -81,6 +78,7 @@ class PrimerDesignGA:
                 if not self.primer_pair_exists(population, primer_pair):
                     self.properties(primer_pair)
                     population.append(primer_pair)
+      
         return population  
         
     def primer_pair_exists(self, population, primer_pair):
@@ -116,7 +114,6 @@ class PrimerDesignGA:
         # dzieci
         offspring1 = PrimerPair(new_fs1, new_alpha1, new_beta1, new_gamma1)
         offspring2 = PrimerPair(new_fs2, new_alpha2, new_beta2, new_gamma2)       
-        
         self.properties(offspring1)
         self.properties(offspring2)
         
@@ -147,7 +144,6 @@ class PrimerDesignGA:
             mutated_individual.beta += mutation_value
         elif component_to_mutate == 3:
             mutated_individual.gamma += mutation_value
-            
         self.properties(mutated_individual)
         
         self.new_gen.append(mutated_individual)
@@ -161,26 +157,73 @@ class PrimerDesignGA:
     def new_generation(self):
         while len(self.new_gen) < self.mating_pool:
             if(random.random() < self.Pe):
-                #pair1,pair2 = roulette()
-                pair1 = self.population[random.randint(0, self.population_size - 1)]
-                pair2 = self.population[random.randint(0, self.population_size - 1)]
-                self.crossover(pair1,pair2)
+                pair1,pair2 = self.roulette()
+                #pair1 = self.population[random.randint(0, self.population_size - 1)]
+                #pair2 = self.population[random.randint(0, self.population_size - 1)]
+                if pair1 is not None and pair2 is not None:
+                    self.crossover(pair1,pair2)
             
             if(random.random() < self.Pm):
                 rand_pair = self.population[random.randint(0, self.population_size - 1)]
                 self.mutate(rand_pair)
         
-        self.population = self.combine_and_sort()    
+        self.population = self.combine_and_sort() 
+
+    def roulette(self):
         
+        pair_no1 = None
+        pair_no2 = None
+        if len(self.population)>=2:
+            sum_of_fitness = 0
+            cumulative_score = 0 
+            rand1 = random.random()
+            rand2 = random.random()
+            done = 0
+
+            for pair in self.population:
+                sum_of_fitness += pair.fitness
+            #print(sum_of_fitness)
+            
+                
+            if sum_of_fitness != 0:
+                for pair in self.population:
+                    #print(pair)
+                    cumulative_score += pair.fitness/sum_of_fitness
+                    #print(f'pairfitness: {pair.fitness}')
+                    #print(f'cumul {cumulative_score}')
+                    if pair_no1 is None and rand1 <= cumulative_score:
+                        if pair != pair_no2:
+                            pair_no1 = pair
+                            done +=1
+                            #print(f'pair1{pair_no1}')
+                        
+                    if pair_no2 is None and rand2 <= cumulative_score:
+                        if pair != pair_no1:
+                            pair_no2 = pair
+                            #print(f'pair2{pair_no2}')
+                            done +=1
+                    if done == 2:
+                        break
+                return pair_no1, pair_no2
+            else:
+                #tu w sumie moznaby przerwa algorytm np dodac jakis argument do GA jakby czy np nie jest idealnie i mozna dac tam break - watpie ze to sie wydarzy ale no 
+                return self.population[random.randint(0, self.population_size - 1)], self.population[random.randint(0, self.population_size - 1)]
+        else:
+            return None, None
+                    
+
     def GA(self):
         i = 0
         while i < self.max_gen:
             self.new_generation()
             i = i + 1
+            self.display_population()
             
+
+
+
             
     def properties(self, pair):
-        
         
         seqF = str(self.dna_sequence[pair.fs : pair.fs + pair.alpha])
         #here I create the complementary and reversed sequence of Reverse Primer. This way I receive it's sequence 5'-> 3'
@@ -195,70 +238,62 @@ class PrimerDesignGA:
         else:
             pair.GC = 1
 
-        print(f'seqF {seqF}')      #trzy printy do usunięcia
-        print(f'preseqR {preseqR}')
-        print(f'seqR {seqR}')
-
         #Tmd_counting
-        # I am using the idea from https://www.rosalind.bio/en/knowledge/what-formula-is-used-to-calculate-tm
-        #I am creating a scale for the fitness punctation. between 0-2 difference it is 0, between 3-4 it is 0.5, then after 5 it is a 1. And if any primer is not betwwen mintemp and maxtemp I add another +1
-        if(pair.alpha > 13):
-            FTM = 64.9+41*(seqF.count('G')+seqF.count('C') - 16.4)/(pair.alpha)
-        else:
-            FTM = (seqF.count('G')+seqF.count('C'))*4 + (seqF.count('A')+seqF.count('T'))*2
-        if(pair.gamma > 13):
-
-            RTM = 64.9+41*(seqR.count('G')+seqR.count('C') - 16.4)/(pair.gamma)
-        else:    
-            RTM = (seqR.count('G')+seqR.count('C'))*4 + (seqR.count('A')+seqR.count('T'))*2
-
-        if(abs(FTM - RTM) <2):
+        FTM = (seqF.count('G')+seqF.count('C'))*4 + (seqF.count('A')+seqF.count('T'))*2
+        RTM = (seqR.count('G')+seqR.count('C'))*4 + (seqR.count('A')+seqR.count('T'))*2
+        if(abs(FTM - RTM <=5)):
             pair.Tmd = 0
-        elif(abs(FTM - RTM) <2):
-            pair.Tmd = 0.5
+            if(FTM < self.mintemp or FTM > self.maxtemp or RTM < self.mintemp or RTM > self.maxtemp ):
+                pair.Tmd = 1
         else:
             pair.Tmd = 1
-
-        if(FTM < self.mintemp or FTM > self.maxtemp or RTM < self.mintemp or RTM > self.maxtemp ):
-            pair.Tmd += 1
         #print(f'Tmd = {FTM} {RTM}')
   
         #Uni_counting
         if (self.dna_sequence.count(seqF) != 1):
                 pair.uni = 1
-                print('seqF sie powtarza')
+                #print('seqF sie powtarza')
         else:
             if(self.dna_sequence.count(preseqR) != 1):
                 pair.uni = 1
-                print('preseqR sie powtarza')
+                #print('preseqR sie powtarza')
             else:
                 pair.uni = 0
                 
         #Term_counting
         if len(seqF)>=1:
             if(seqF[-1] in ['G','C']):
-                if(seqF[-2] in ['G','C'] and len(seqF)>=2):
-                    if(seqF[-3] not in ['G','C']and len(seqF)>=3):
-                        pair.Term = 0    
+                if(len(seqF)>=2):
+                    if(seqF[-2] in ['G','C']):
+                        if(len(seqF)>=3):
+                            if(seqF[-3] not in ['G','C']):
+                                pair.Term = 0    
+                            else:
+                                pair.Term = 1
                     else:
-                        pair.Term = 1
-                else:
-                    pair.Term = 0
+                        pair.Term = 0
             else:
                 pair.Term = 1
-            if(seqR[-1] in ['G','C'] and len(seqF)>=1):
-                if(seqR[-2] in ['G','C'] and len(seqF)>=2):
-                    if(seqR[-3] in ['G','C'] and len(seqF)>=3):
-                        pair.Term += 1
+        if(len(seqR)>=1):
+            if(seqR[-1] in ['G','C']):
+                if(len(seqR)>=2):
+                    if(seqR[-2] in ['G','C']):
+                        if(len(seqR)>=3):
+                            if(seqR[-3] in ['G','C']):
+                                pair.Term += 1
             else:
                 pair.Term += 1
             
 
         #lengd_counting
-        if abs(len(seqF) -len(seqR)) > 3:
-            pair.lengd = 1
+        if abs(len(seqF) -len(seqR)) >= 5:
+            pair.lengd = 0.75
+        elif abs(len(seqF) -len(seqR)) < 5 and abs(len(seqF) -len(seqR)) >= 3 :
+            pair.lengd = 0.5
+        elif abs(len(seqF) -len(seqR)) < 3 and abs(len(seqF) -len(seqR)) >= 1 :
+            pair.lengd = 0.25
         else:
-            pair.lengd = 0
+            pair.lengd = 1
 
         #leng_counting
         if len(seqF) >= min_primer_length and len(seqF) <= max_primer_length and len(seqR) >= min_primer_length and len(seqR) <= max_primer_length:
@@ -270,111 +305,46 @@ class PrimerDesignGA:
         #Sc_counting
         #here I check the self-complementarity
         #hairpins
-            # DOPISAC sytuacja ze np laczy sie 1 para 2 nie ale 3 i 4 tak a potem np dopiero 7
         min_loop_size = 3
-        max_loop_size = 26 
         min_stem_size = 4
         pair.Sc = 0
 
-        if(len(seqF) - 2*min_stem_size - min_loop_size > 0):
-            for i in range(len(seqF) - 2*min_stem_size - min_loop_size):
-                stem_seq_proposition = seqF[i:i+min_stem_size]
-                if (i + 2*min_stem_size + max_loop_size < len(seqF)):
-                    the_opposite_probable_stem_seq = seqF[i + min_stem_size + min_loop_size : i + 2*min_stem_size + max_loop_size ]
-                else:
-                    the_opposite_probable_stem_seq = seqF[i + min_stem_size + min_loop_size : ]
-                the_opposite_probable_stem_seq_complementary = self.complementary(the_opposite_probable_stem_seq)
-                if(stem_seq_proposition in the_opposite_probable_stem_seq_complementary):
+        if(len(seqF) - 2*min_stem_size - min_loop_size >= 0):
+            for i in range(len(seqF)-min_loop_size - 2*min_stem_size+1):
+                if self.complementarity_check(seqF[:min_stem_size+i], seqF[min_stem_size + i + min_loop_size:]):
                     pair.Sc = 1
-
+                    break
         if pair.Sc == 0:
-            if(len(seqR) - 2*min_stem_size - min_loop_size > 0):
-                for i in range(len(seqR) - 2*min_stem_size - min_loop_size):
-                    stem_seq_proposition = seqR[i:i+min_stem_size]
-                    if (i + 2*min_stem_size + max_loop_size < len(seqR)):
-                        the_opposite_probable_stem_seq = seqR[i + min_stem_size + min_loop_size : i + 2*min_stem_size + max_loop_size ]
-                    else:
-                        the_opposite_probable_stem_seq = seqR[i + min_stem_size + min_loop_size : ]
-                    the_opposite_probable_stem_seq_complementary = self.complementary(the_opposite_probable_stem_seq)
-                    if(stem_seq_proposition in the_opposite_probable_stem_seq_complementary):
+            if(len(seqR) - 2*min_stem_size - min_loop_size >= 0):
+                for i in range(len(seqF)-min_loop_size - 2*min_stem_size+1):
+                    if self.complementarity_check(seqR[:min_stem_size+i], seqR[min_stem_size + i + min_loop_size:]):
                         pair.Sc = 1
-
-
+                        break
 
 
 
         #PC_counting     TU MOZNA TEZ DOPISAC TAKIE complementary z przerwami!!!
-        #api dla https://www.thermofisher.com/pl/en/home/brands/thermo-scientific/molecular-biology/molecular-biology-learning-center/molecular-biology-resource-library/thermo-scientific-web-tools/multiple-primer-analyzer.html
-        min_compl_size = 6
+        #here we check whether two primers hybrydize together. The minimal number of compatible nucleotides is in the variable min_compl_size
+        '''min_compl_size = 3
         for i in range(len(seqF) - min_compl_size):
             checked_fragment = seqF[i:i+min_compl_size]
             if checked_fragment in preseqR:
                 pair.PC = 1
             else:
                 pair.PC = 0
-        counter = 0
-        for f in range(len(seqF)-min_compl_size):
-            if counter >= min_compl_size:
-                            break
-            for r in range(len(seqR)-min_compl_size):
-                
-                if counter >= min_compl_size:
-                            break
-                counter = 0
-                if self.complementary(seqF[f]) == seqR[r]:
-                    print(f'nowe f: {f}')
-                    print(f'nowe r: {r}')
-                    counter += 1
-                    j=r+1
-                    for i in range(f+1, len(seqF)):
-                        if j < len(seqR):
-                            if self.complementary(seqF[i]) == seqR[j]:
-                                print(counter)
-                                counter +=1
-
-                            j+=1
-                            if counter >= min_compl_size:
-                                break
-                        else:
-                            break
-        if counter >= min_compl_size:
-            PC = 1
+'''
+        if(self.complementarity_check(seqF, seqR)):
+            pair.PC = 1
         else:
-            PC = 0
-            #checking the reversed sequence of forward primer with the sequence of reverse primer
-            rseqF = seqF[::-1]
-            for f in range(len(seqF)-min_compl_size):
-                if counter >= min_compl_size:
-                                break
-                for r in range(len(seqR)-min_compl_size):
-                    
-                    if counter >= min_compl_size:
-                                break
-                    counter = 0
-                    if self.complementary(rseqF[f]) == seqR[r]:
-                        print(f'nowe f: {f}')
-                        print(f'nowe r: {r}')
-                        counter += 1
-                        j=r+1
-                        for i in range(f+1, len(seqF)):
-                            if j < len(seqR):
-                                if self.complementary(rseqF[i]) == seqR[j]:
-                                    print(counter)
-                                    counter +=1
+            pair.PC = 0
 
-                                j+=1
-                                if counter >= min_compl_size:
-                                    break
-                            else:
-                                break
-            if counter >= min_compl_size:
-                PC = 1
-                            
-                        
 
-                    
 
-        #R_counting - restriction enzyme              moze bysmy sobie to liczyly tylko do eksperymentu z klonowaniem ekspresyjnym?
+
+        pair.FITNESS_counting() 
+        #print(pair) 
+
+        '''#R_counting - restriction enzyme
         #this function is changed - we are going to search whether there is a restriction enzyme's cutting site in the whole sequence and reverse sequence
         amplified_sequence = self.dna_sequence[pair.fs : pair.fs+pair.alpha+pair.beta+pair.gamma ]
         amplified_sequence_complementary = self.complementary(amplified_sequence)
@@ -383,26 +353,16 @@ class PrimerDesignGA:
             if(restr_seq != 'n'):
                 #here I check whether this restricion site exists in the target sequence, if yes it should be disqualified
                 if(restr_seq in (self.dna_sequence[self.beg_true : self.end_true]) or (restr_seq in self.complementary((self.dna_sequence[self.beg_true : self.end_true])))):
-                    pair.R = 1000000
-                    print(f'You chose a restriction enzyme which cuts the target sequence {restr_seq}')
-                    #przerywamy tu moze calosc???
-                    break
-                '''
+                    pair.R = 1
+                    continue
                 else:
-                    #in an amplified seq but not in the target : good one
+                    #tu przypadek ze wgl jest w amplifikowanej ale poza targetem
                     if restr_seq in amplified_sequence or restr_seq in amplified_sequence_complementary:
-                        pair.R = 0
-                    if (self.experiment == 'expressioncloning'):
-                        if (restr_seq in seqF) or (restr_seq in seqR):
-                            pair.R = 0                         #tu możemy dopisać co jeśli naturalnie w samym primerze wystepuje takie miejsce ale to po konsultacji
-                        else:
-                            seqF = 'AT' + restr_seq[0] + seqF
-                            preseqR = preseqR + restr_seq[1] + 'AT'
-                            seqR = self.complementary(preseqR) '''
-
-
-        pair.FITNESS_counting() 
-        print(pair)           
+                        pass
+                    if (restr_seq in seqF) or (restr_seq in seqR):
+                        pass                             #tu możemy dopisać co jeśli naturalnie w samym peimerze wystepuje takie miejsce ale to po konsultacji
+            '''        
+          
 
     @staticmethod
     def complementary(sequence):
@@ -412,18 +372,42 @@ class PrimerDesignGA:
             compl_sequence += dic[i]
         compl_sequence = compl_sequence[::-1]
         return compl_sequence
+    
+    def complementarity_check(self,seq1,seq2):
+        #deciding how many TA pairs and how many CG pairs will result in a secondary structure
+        how_many_TA = 6
+        how_many_CG = 4
+        summary_how_many = (how_many_TA+how_many_CG)/2
+        seq2 = self.complementary(seq2)
+
+        for i in range(len(seq1)):
+            counter_TA = 0
+            counter_CG = 0
+            for j in range(len(seq2)):
+                if i+j >= len(seq1):
+                     break
+                if seq1[i+j] == seq2[j] and seq1[i+j] in ('A', 'T'):
+                        counter_TA += 1
+                elif seq1[i+j] == seq2[j] and seq1[i+j] in ('G', 'C'):
+                        counter_CG += 1
+            #normalization
+            counter_CG = counter_CG*how_many_TA/how_many_CG
+            counter_TA = counter_TA*how_many_CG/how_many_TA
+            if (counter_CG + counter_TA) >= summary_how_many:
+                return True
+        return False    
+
+            
+            
+            
+
+
 
 
 #czemu nie damy tego wczesniej? bo jest to uzywane w funkcjach powyzej 
             #MUSIMY ZMIENIC!!!!!!   
-min_primer_length = 4 #18
-max_primer_length = 6 #26
-#if(self.experiment == 'expressioncloning'):
-    #max_primer_length_finish = 31
-
-
-
-
+min_primer_length = 18
+max_primer_length = 30
 #funkcja do szukania poczatkowego i koncowego indeksu sekwencji do klonowania
 def find_target_sequence(dna_sequence, target_sequence):
     start_index = dna_sequence.find(target_sequence)
@@ -435,7 +419,7 @@ def find_target_sequence(dna_sequence, target_sequence):
         return None
  
 
-whole_dna_sequence = "ATCGTGACTGATCGTACGTACGTAGCTAGTCTAGTCTAAATGCGCCGAT"
+whole_dna_sequence = "ATCGTGACGAAAAGGGGGGGGGCCCCCCCCCCCGACTAGATCGAGATAGACGATAGCAGACTAGAACTGATCGTACGTACGTAGCTAGTCTAGTCTAAATGCATATGGGACAGTAGATCATAGATACAAAGACTGCGCCGAT"
 target_sequence_to_replicate = "GTACGTAGC"
 position = find_target_sequence(whole_dna_sequence, target_sequence_to_replicate)
-ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=3, mating_pool = 3, Pe = 0.7, Pm = 0.1, max_gen = 1)
+ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=10, mating_pool = 4, Pe = 0.7, Pm = 0.1, max_gen = 4)
