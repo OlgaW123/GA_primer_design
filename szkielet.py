@@ -110,12 +110,18 @@ class PrimerDesignGA:
 
         # dzieci
         offspring1 = PrimerPair(new_fs1, new_alpha1, new_beta1, new_gamma1)
-        offspring2 = PrimerPair(new_fs2, new_alpha2, new_beta2, new_gamma2)       
-        self.properties(offspring1)
-        self.properties(offspring2)
+        offspring2 = PrimerPair(new_fs2, new_alpha2, new_beta2, new_gamma2)
         
-        self.new_gen.append(offspring1)
-        self.new_gen.append(offspring2)
+        if not self.primer_pair_exists(self.population,offspring1):
+            if not self.primer_pair_exists(self.new_gen, offspring1):
+                self.properties(offspring1)
+                self.new_gen.append(offspring1)
+                
+        if not self.primer_pair_exists(self.population,offspring2):
+            if not self.primer_pair_exists(self.new_gen, offspring2):
+                self.properties(offspring2)
+                self.new_gen.append(offspring2)
+
     
     
     def mutate(self, individual):
@@ -124,7 +130,7 @@ class PrimerDesignGA:
         
         if component_to_mutate == 0:
             mutation_value = random.randint(0, self.beg_true)
-        elif component_to_mutate == 3:
+        elif component_to_mutate == 2:
             mutation_value = random.randint(self.end_true - (individual.fs + individual.alpha), len(self.dna_sequence) - individual.gamma - (individual.fs + individual.alpha))
         else:
             mutation_value = random.randint(min_primer_length, max_primer_length)
@@ -134,29 +140,29 @@ class PrimerDesignGA:
 
         # mutacja
         if component_to_mutate == 0:
-            mutated_individual.fs += mutation_value
+            mutated_individual.fs = mutation_value
         elif component_to_mutate == 1:
-            mutated_individual.alpha += mutation_value
+            mutated_individual.alpha = mutation_value
         elif component_to_mutate == 2:
-            mutated_individual.beta += mutation_value
+            mutated_individual.beta = mutation_value
         elif component_to_mutate == 3:
-            mutated_individual.gamma += mutation_value
-        self.properties(mutated_individual)
-        
-        self.new_gen.append(mutated_individual)
+            mutated_individual.gamma = mutation_value
+            
+        if not self.primer_pair_exists(self.population, mutated_individual):
+            if not self.primer_pair_exists(self.new_gen, mutated_individual):
+                self.properties(mutated_individual)
+                self.new_gen.append(mutated_individual)
     
     def combine_and_sort(self):
         self.population.extend(self.new_gen)
         self.new_gen.clear()
-        self.population.sort(key=lambda pair: pair.fitness)
+        self.population.sort(key=lambda pair: pair.fitness,reverse=True)
         return self.population[:min(self.population_size, len(self.population))]
         
     def new_generation(self):
         while len(self.new_gen) < self.mating_pool:
             if(random.random() < self.Pe):
                 pair1,pair2 = self.roulette()
-                #pair1 = self.population[random.randint(0, self.population_size - 1)]
-                #pair2 = self.population[random.randint(0, self.population_size - 1)]
                 if pair1 is not None and pair2 is not None:
                     self.crossover(pair1,pair2)
             
@@ -421,6 +427,6 @@ def find_target_sequence(dna_sequence, target_sequence):
  
 
 whole_dna_sequence = "ATAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGATCATAGACAGCGTGACGAAAAGGGGGGGGGCCCCCCCCCCCGACTAGATCGAGATAGACGATAGCAGACTAGAACTGATCGTACGTACGTAGCTAGTCTAGTCTAAATGCATATGGGACAGTAGATCATAGATACAAAGACTGCGCCGAT"
-target_sequence_to_replicate = "GTACGTAGC"
+target_sequence_to_replicate = "CCCGACTAGATCGAGATAGACGATAGCAGACTAGAACTGATCGTACGTACGTAGCTAGTCTAGTCTAAATGCATATGGGACA"
 position = find_target_sequence(whole_dna_sequence, target_sequence_to_replicate)
-ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=100, mating_pool = 14, Pe = 0.4, Pm = 0.2, max_gen = 17)
+ga = PrimerDesignGA(whole_dna_sequence, position[0], position[1], population_size=50, mating_pool = 25, Pe = 0.4, Pm = 0.2, max_gen = 10)
