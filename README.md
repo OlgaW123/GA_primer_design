@@ -30,4 +30,10 @@ Test twoBitToFa
 ##
     twoBitToFa
 
+Necessary data
+# hg38.2bit
+Can be found here
+##
+    https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/    
+
 
