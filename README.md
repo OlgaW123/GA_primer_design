@@ -34,6 +34,38 @@ Necessary data
 # hg38.2bit
 Can be found here
 ##
-    https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/    
+    https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/
+    
+# BLASTN - (on linux)
+How to install BLASTN?
+Download BLASTN
+##
+    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.12.0+-x64-linux.tar.gz
+Extract file
+##
+    tar -xzvf ncbi-blast-2.12.0+-x64-linux.tar.gz
+Add BLASTN to your PATH eg.
+##
+    export PATH=$PATH:/path/to/ncbi-blast-2.12.0+/bin
+To edit .bashrc
+##
+    nano ~/.bashrc
+    #paste the path at the end
+    source ~/.bashrc
+Test BLASTN
+##
+    blastn
+
+# BLAT Database
+How to make a database?
+Download human genome 
+##
+    wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_full_analysis_set.fna.gz
+Extract data
+##
+    gunzip GCA_000001405.15_GRCh38_full_analysis_set.fna.gz
+Make BLAST database
+##
+    makeblastdb -in GCA_000001405.15_GRCh38_full_analysis_set.fna -dbtype nucl -out human_genome_db
 
 
