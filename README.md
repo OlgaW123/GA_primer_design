@@ -56,7 +56,7 @@ Test BLASTN
 ##
     blastn
 
-# BLAT Database
+# BLAST Database
 How to make a database?
 Download human genome 
 ##
