@@ -112,13 +112,15 @@ class PrimerDesignGA:
         offspring1 = PrimerPair(new_fs1, new_alpha1, new_beta1, new_gamma1)
         offspring2 = PrimerPair(new_fs2, new_alpha2, new_beta2, new_gamma2)
 
-        if(offspring1.fs + offspring1.alpha + offspring1.beta + offspring1.gamma < len(self.dna_sequence)):
+        if offspring1.fs + offspring1.alpha + offspring1.beta + offspring1.gamma < len(self.dna_sequence):
+            print("kot")
             if not self.primer_pair_exists(self.population,offspring1):
                 if not self.primer_pair_exists(self.new_gen, offspring1):
                     self.properties(offspring1)
                     self.new_gen.append(offspring1)
 
-        if(offspring2.fs + offspring2.alpha + offspring2.beta + offspring2.gamma < len(self.dna_sequence)):
+        if offspring2.fs + offspring2.alpha + offspring2.beta + offspring2.gamma < len(self.dna_sequence):
+            print("pies")
             if not self.primer_pair_exists(self.population,offspring2):
                 if not self.primer_pair_exists(self.new_gen, offspring2):
                     self.properties(offspring2)
