@@ -101,8 +101,8 @@ class PrimerDesignGA:
         # crossover
         new_fs1, new_fs2 = (parent2.fs if binary_mask[0] == '1' else parent1.fs,
                             parent1.fs if binary_mask[0] == '1' else parent2.fs)
-        new_alpha1, new_alpha2 = (parent1.alpha if binary_mask[1] == '1' else parent2.alpha,
-                                 parent2.alpha if binary_mask[1] == '1' else parent1.alpha)
+        new_alpha1, new_alpha2 = (parent2.alpha if binary_mask[1] == '1' else parent1.alpha,
+                                 parent1.alpha if binary_mask[1] == '1' else parent2.alpha)
         new_beta1, new_beta2 = (parent2.beta if binary_mask[2] == '1' else parent1.beta,
                                 parent1.beta if binary_mask[2] == '1' else parent2.beta)
         new_gamma1, new_gamma2 = (parent2.gamma if binary_mask[3] == '1' else parent1.gamma,
@@ -112,13 +112,13 @@ class PrimerDesignGA:
         offspring1 = PrimerPair(new_fs1, new_alpha1, new_beta1, new_gamma1)
         offspring2 = PrimerPair(new_fs2, new_alpha2, new_beta2, new_gamma2)
 
-        if(offspring1.fs + offspring1.alpha + offspring1.beta <= len(self.dna_sequence) - offspring1.gamma):
+        if(offspring1.fs + offspring1.alpha + offspring1.beta + offspring1.gamma < len(self.dna_sequence)):
             if not self.primer_pair_exists(self.population,offspring1):
                 if not self.primer_pair_exists(self.new_gen, offspring1):
                     self.properties(offspring1)
                     self.new_gen.append(offspring1)
 
-        if(offspring2.fs + offspring2.alpha + offspring2.beta <= len(self.dna_sequence) - offspring2.gamma):
+        if(offspring2.fs + offspring2.alpha + offspring2.beta + offspring2.gamma < len(self.dna_sequence)):
             if not self.primer_pair_exists(self.population,offspring2):
                 if not self.primer_pair_exists(self.new_gen, offspring2):
                     self.properties(offspring2)
