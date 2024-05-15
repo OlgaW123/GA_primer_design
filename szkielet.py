@@ -52,7 +52,6 @@ class PrimerDesignGA:
         self.new_gen = []
         self.GA()
 
-
     def gather_input_info(self):
         self.mintemp = int(input("Please input the minimum melting temperature: "))
         self.maxtemp = int(input("Please input the maximum melting temperature: "))
@@ -71,7 +70,7 @@ class PrimerDesignGA:
 
             else:
             #beta = random.randint(self.end_true - (fs + alpha), len(self.dna_sequence) - gamma)                #Ania zmienila 12.04.2024 10:32
-                beta = random.randint(self.end_true - (fs + alpha), len(self.dna_sequence) - gamma - (fs + alpha))
+                beta = random.randint(self.end_true - gamma - (fs + alpha), len(self.dna_sequence) - gamma - (fs + alpha))
                 primer_pair = PrimerPair(fs, alpha, beta, gamma)
                 if not self.primer_pair_exists(population, primer_pair):
                     self.properties(primer_pair)
@@ -113,15 +112,17 @@ class PrimerDesignGA:
         offspring1 = PrimerPair(new_fs1, new_alpha1, new_beta1, new_gamma1)
         offspring2 = PrimerPair(new_fs2, new_alpha2, new_beta2, new_gamma2)
 
-        if not self.primer_pair_exists(self.population,offspring1):
-            if not self.primer_pair_exists(self.new_gen, offspring1):
-                self.properties(offspring1)
-                self.new_gen.append(offspring1)
+        if(offspring1.fs + offspring1.alpha + offspring1.beta <= len(self.dna_sequence) - offspring1.gamma):
+            if not self.primer_pair_exists(self.population,offspring1):
+                if not self.primer_pair_exists(self.new_gen, offspring1):
+                    self.properties(offspring1)
+                    self.new_gen.append(offspring1)
 
-        if not self.primer_pair_exists(self.population,offspring2):
-            if not self.primer_pair_exists(self.new_gen, offspring2):
-                self.properties(offspring2)
-                self.new_gen.append(offspring2)
+        if(offspring2.fs + offspring2.alpha + offspring2.beta <= len(self.dna_sequence) - offspring2.gamma):
+            if not self.primer_pair_exists(self.population,offspring2):
+                if not self.primer_pair_exists(self.new_gen, offspring2):
+                    self.properties(offspring2)
+                    self.new_gen.append(offspring2)
 
 
 
@@ -132,7 +133,7 @@ class PrimerDesignGA:
         if component_to_mutate == 0:
             mutation_value = random.randint(0, self.beg_true)
         elif component_to_mutate == 2:
-            mutation_value = random.randint(self.end_true - (individual.fs + individual.alpha), len(self.dna_sequence) - individual.gamma - (individual.fs + individual.alpha))
+            mutation_value = random.randint(self.end_true - individual.gamma - (individual.fs + individual.alpha), len(self.dna_sequence) - individual.gamma - (individual.fs + individual.alpha))
         else:
             mutation_value = random.randint(min_primer_length, max_primer_length)
 
@@ -406,7 +407,9 @@ class PrimerDesignGA:
 
             # Writing to FASTA format
                 fasta.write(f">{idx}_f\n{fwd_primer}\n")
+                print(f">{idx}_f_beta_{primer_pair.beta}\n{fwd_primer}\n")
                 fasta.write(f">{idx}_r\n{rev_primer}\n")
+                print(f">{idx}_r_beta{primer_pair.beta}\n{rev_primer}\n")
 
     def blast_search(self, fasta_file, blast_db, output_file):
         """
@@ -427,7 +430,9 @@ class PrimerDesignGA:
                 '-outfmt', '6',  # Tabular format
                 '-perc_identity', '90',  # Minimum percentage identity for matches
                 '-qcov_hsp_perc', '90',  # Query coverage per HSP
+                '-num_threads', '4',
                 '-task', 'blastn-short'  # Optimized for short sequences like primers
+
             ]
 
             # Execute the command
@@ -480,7 +485,7 @@ class PrimerDesignGA:
                 elif results[index + 1] == 0:
                     primer.uni += 1
                 primer.FITNESS_counting()
-                print(primer.uni)
+                #print(primer.uni)
         else:
             for index,primer in enumerate(self.new_gen):
                 if results[index] > 1:
@@ -492,7 +497,7 @@ class PrimerDesignGA:
                 elif results[index + 1] == 0:
                     primer.uni += 1
                 primer.FITNESS_counting()
-                print(primer.uni)
+                #print(primer.uni)
 
 def run_blat(query):
     # Run BLAT
@@ -563,4 +568,4 @@ target_sequence = "target.fasta"
 chrom, start, end = run_blat(target_sequence)
 extended_sequence = extract_sequence("hg38.fa", chrom, start, end)
 extended_sequence = extended_sequence.upper()
-ga = PrimerDesignGA(extended_sequence, 1000, len(extended_sequence) - 1000, population_size=50, mating_pool = 25, Pe = 0.4, Pm = 0.2, max_gen = 1)
+ga = PrimerDesignGA(extended_sequence, 1000, len(extended_sequence) - 1000, population_size=50, mating_pool = 25, Pe = 0.4, Pm = 0.2, max_gen = 100)
