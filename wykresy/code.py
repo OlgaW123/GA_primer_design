@@ -600,8 +600,8 @@ def main():
         extended_sequence,
         1000,
         len(extended_sequence) - 1000,
-        population_size=500,
-        mating_pool=100,
+        population_size=200,
+        mating_pool=80,
         Pe=args.Pe,
         Pm=args.Pm,
         max_gen=100
