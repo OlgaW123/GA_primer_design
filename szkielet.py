@@ -49,6 +49,7 @@ class PrimerDesignGA:
         self.gather_input_info()
         self.population = self.initialize_population()
         self.specifity(0)
+        self.population.sort(key=lambda pair: pair.fitness,reverse=True)
         self.new_gen = []
         self.GA()
 
@@ -70,12 +71,11 @@ class PrimerDesignGA:
 
             else:
             #beta = random.randint(self.end_true - (fs + alpha), len(self.dna_sequence) - gamma)                #Ania zmienila 12.04.2024 10:32
-                beta = random.randint(self.end_true - gamma - (fs + alpha), len(self.dna_sequence) - gamma - (fs + alpha))
+                beta = random.randint(self.end_true - (fs + alpha), len(self.dna_sequence) - gamma - (fs + alpha))
                 primer_pair = PrimerPair(fs, alpha, beta, gamma)
                 if not self.primer_pair_exists(population, primer_pair):
                     self.properties(primer_pair)
                     population.append(primer_pair)
-
         return population
 
     def primer_pair_exists(self, population, primer_pair):
@@ -88,7 +88,6 @@ class PrimerDesignGA:
         print(f"{'Index':>5} | {'Fs':>5} | {'Fe':>5} | {'Rs':>5} | {'Re':>5} | {'Vector (Fs, Alpha, Beta, Gamma)':>30} | {'Fitness':>10}")
         print("-" * 70)
         for index, primer_pair in enumerate(self.population):
-            self.properties(primer_pair)     #to mozna usunac!
             print(f"{index:5} | {primer_pair.fs:5} | {primer_pair.fe:5} | {primer_pair.rs:5} | {primer_pair.re:5} | "
                   f"({primer_pair.fs}, {primer_pair.alpha}, {primer_pair.beta}, {primer_pair.gamma}) | {primer_pair.fitness}")
 
@@ -112,15 +111,14 @@ class PrimerDesignGA:
         offspring1 = PrimerPair(new_fs1, new_alpha1, new_beta1, new_gamma1)
         offspring2 = PrimerPair(new_fs2, new_alpha2, new_beta2, new_gamma2)
 
-        if offspring1.fs + offspring1.alpha + offspring1.beta + offspring1.gamma < len(self.dna_sequence):
-            print("kot")
+        if(offspring1.fs + offspring1.alpha + offspring1.beta + offspring1.gamma <= len(self.dna_sequence)):
             if not self.primer_pair_exists(self.population,offspring1):
                 if not self.primer_pair_exists(self.new_gen, offspring1):
                     self.properties(offspring1)
                     self.new_gen.append(offspring1)
 
-        if offspring2.fs + offspring2.alpha + offspring2.beta + offspring2.gamma < len(self.dna_sequence):
-            print("pies")
+        if(offspring2.fs + offspring2.alpha + offspring2.beta + offspring2.gamma <= len(self.dna_sequence)):
+
             if not self.primer_pair_exists(self.population,offspring2):
                 if not self.primer_pair_exists(self.new_gen, offspring2):
                     self.properties(offspring2)
@@ -134,28 +132,22 @@ class PrimerDesignGA:
 
         if component_to_mutate == 0:
             mutation_value = random.randint(0, self.beg_true)
+            mutated_individual = PrimerPair(mutation_value, individual.alpha, individual.beta, individual.gamma)
+        elif component_to_mutate == 1:
+            mutation_value = random.randint(min_primer_length, max_primer_length)
+            mutated_individual = PrimerPair(individual.fs, mutation_value, individual.beta, individual.gamma)
         elif component_to_mutate == 2:
-            mutation_value = random.randint(self.end_true - individual.gamma - (individual.fs + individual.alpha), len(self.dna_sequence) - individual.gamma - (individual.fs + individual.alpha))
+            mutation_value = random.randint(self.end_true - (individual.fs + individual.alpha), len(self.dna_sequence) - individual.gamma - (individual.fs + individual.alpha))
+            mutated_individual = PrimerPair(individual.fs, individual.alpha, mutation_value, individual.gamma)
         else:
             mutation_value = random.randint(min_primer_length, max_primer_length)
+            mutated_individual = PrimerPair(individual.fs, individual.alpha, individual.beta, mutation_value)
 
-        # kopia
-        mutated_individual = PrimerPair(individual.fs, individual.alpha, individual.beta, individual.gamma)
-
-        # mutacja
-        if component_to_mutate == 0:
-            mutated_individual.fs = mutation_value
-        elif component_to_mutate == 1:
-            mutated_individual.alpha = mutation_value
-        elif component_to_mutate == 2:
-            mutated_individual.beta = mutation_value
-        elif component_to_mutate == 3:
-            mutated_individual.gamma = mutation_value
-
-        if not self.primer_pair_exists(self.population, mutated_individual):
-            if not self.primer_pair_exists(self.new_gen, mutated_individual):
-                self.properties(mutated_individual)
-                self.new_gen.append(mutated_individual)
+        if(mutated_individual.fs + mutated_individual.alpha + mutated_individual.beta + mutated_individual.gamma <= len(self.dna_sequence)):
+            if not self.primer_pair_exists(self.population, mutated_individual):
+                if not self.primer_pair_exists(self.new_gen, mutated_individual):
+                    self.properties(mutated_individual)
+                    self.new_gen.append(mutated_individual)
 
     def combine_and_sort(self):
         self.specifity(1)
@@ -223,9 +215,10 @@ class PrimerDesignGA:
     def GA(self):
         i = 0
         while i < self.max_gen:
+            print(self.population[0].fitness)
             self.new_generation()
             i = i + 1
-            self.display_population()
+            #self.display_population()
 
 
 
@@ -409,9 +402,9 @@ class PrimerDesignGA:
 
             # Writing to FASTA format
                 fasta.write(f">{idx}_f\n{fwd_primer}\n")
-                print(f">{idx}_f_beta_{primer_pair.beta}\n{fwd_primer}\n")
+                #print(f">{idx}_f\n{fwd_primer}\n")
                 fasta.write(f">{idx}_r\n{rev_primer}\n")
-                print(f">{idx}_r_beta{primer_pair.beta}\n{rev_primer}\n")
+                #print(f">{idx}_r\n{rev_primer}\n")
 
     def blast_search(self, fasta_file, blast_db, output_file):
         """
@@ -439,7 +432,7 @@ class PrimerDesignGA:
 
             # Execute the command
             subprocess.run(command, check=True)
-            print("BLASTN search completed successfully.")
+            #print("BLASTN search completed successfully.")
         except subprocess.CalledProcessError as e:
             print(f"BLASTN search failed: {e}")
         except Exception as e:
@@ -514,9 +507,9 @@ def run_blat(query):
             best_hit = lines[5].strip().split()
 
     # Clean up temporary files
-    #os.remove("blat_output.psl")
-    for index,field in enumerate(best_hit):
-        print(f"Index {index}: {field}")
+    os.remove("blat_output.psl")
+    #for index,field in enumerate(best_hit):
+        #print(f"Index {index}: {field}")
     t_starts = list(map(int, best_hit[20].strip(',').split(',')))
     q_sizes = list(map(int, best_hit[18].strip(',').split(',')))
     return best_hit[13], t_starts[0], t_starts[-1] + q_sizes[-1]  # Start and end coordinates of the best hit
@@ -541,9 +534,9 @@ def fasta_to_string(file_name):
 def extract_sequence(genome, chrom, start, end):
     # Adjust coordinates to include 1000 nucleotides on each side
     start = max(0, start - 1000)
-    print(start)
+    #print(start)
     end = end + 1000
-    print(end)
+    #print(end)
     # Load the genome using twoBitToFa (if not already in a parseable format)
     subprocess.run(["twoBitToFa", f"-seq={chrom}", f"-start={start}", f"-end={end}", "hg38.2bit", "hg38_cut.fa"], check=True)
     # Extract the sequence
@@ -570,4 +563,4 @@ target_sequence = "target.fasta"
 chrom, start, end = run_blat(target_sequence)
 extended_sequence = extract_sequence("hg38.fa", chrom, start, end)
 extended_sequence = extended_sequence.upper()
-ga = PrimerDesignGA(extended_sequence, 1000, len(extended_sequence) - 1000, population_size=50, mating_pool = 25, Pe = 0.4, Pm = 0.2, max_gen = 100)
+ga = PrimerDesignGA(extended_sequence, 1000, len(extended_sequence) - 1000, population_size=500, mating_pool = 250, Pe = 0.4, Pm = 0.8, max_gen = 100)
