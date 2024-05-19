@@ -45,8 +45,8 @@ class PrimerDesignGA:
         self.Pm = Pm #prawdopodobienstwo mutacji
         self.max_gen = max_gen #maksymalna ilosc generacji
         #self.restriction_sequences = []
-        self.maxtemp = 50
-        self.mintemp = 70
+        self.maxtemp = 70
+        self.mintemp = 50
         #self.gather_input_info()
         if os.path.exists("initial_population.txt"):
             self.population = self.read_population_from_file("initial_population.txt")
